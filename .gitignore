@@ -1,0 +1,16 @@
+.env
+
+# Dependency directory
+node_modules
+
+# OS metadata
+.DS_Store
+
+# Ignore built ts files
+dist/**/*
+
+# Ignore temp directory data
+temp/**/*
+
+# ignore yarn.lock
+package-lock.json
