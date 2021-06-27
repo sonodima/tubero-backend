@@ -11,6 +11,3 @@ dist/**/*
 
 # Ignore temp directory data
 temp/**/*
-
-# ignore yarn.lock
-package-lock.json

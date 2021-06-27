@@ -1,7 +1,8 @@
 {
   "name": "tubero-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "backend module of tubero: the simplest self hosted youtube downloader.",
+  "repository": "sonodima/tubero-backend",
   "main": "main.js",
   "scripts": {
     "start": "nodemon",
@@ -27,7 +28,6 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "crypto": "^1.0.1",
     "express": "^4.17.1",
     "ffmpeg-static": "^4.4.0",
     "node-itunes-search": "^1.2.2",
