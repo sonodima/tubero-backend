@@ -9,7 +9,7 @@ async function download(
   req: Request<{}, {}, {}, DownloadQuery>,
   res: Response
 ): Promise<any> {
-  if (req.query.id === undefined) {
+  if (req.query.id === undefined || req.query.id === '') {
     res.status(400).json({
       error: 'parameter [id] is required',
     });
