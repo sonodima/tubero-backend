@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import ytdl, { videoInfo } from 'ytdl-core';
 
+import isId from '../utils/isId';
+
 import InfoQuery from '../types/InfoQuery';
 import InfoResponse from '../types/InfoResponse';
 
@@ -15,6 +17,18 @@ async function info(
       author: undefined,
       thumbnail: undefined,
     });
+    return;
+  }
+
+  if (!isId(req.query.v)) {
+    res
+      .status(400)
+      .json({
+        error: 'parameter [v] is not a valid id',
+        title: undefined,
+        author: undefined,
+        thumbnail: undefined,
+      });
     return;
   }
 

@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import ytdl, { videoInfo } from 'ytdl-core';
 
-import ConvertQuery from '../types/ConvertQuery';
 import audio from '../core/audio';
+import isId from '../utils/isId';
+
+import ConvertQuery from '../types/ConvertQuery';
 
 async function convert(
   req: Request<{}, {}, {}, ConvertQuery>,
@@ -10,6 +12,11 @@ async function convert(
 ): Promise<any> {
   if (req.query.v === undefined) {
     res.status(400).json({ error: 'parameter [v] is required' });
+    return;
+  }
+
+  if (!isId(req.query.v)) {
+    res.status(400).json({ error: 'parameter [v] is not a valid id' });
     return;
   }
 
@@ -42,6 +49,7 @@ async function convert(
 
   let id: string;
   try {
+    // todo: handle video case
     id = await audio(info, req.query.mw, (percent) => {
       res.write('event: progress\n');
       res.write(`data: ${JSON.stringify({ percent })}`);
