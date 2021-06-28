@@ -3,36 +3,17 @@ import cp from 'child_process';
 import ytdl, { videoInfo } from 'ytdl-core';
 import ffmpeg from 'ffmpeg-static';
 
-import unclutterTitle from '../utils/unclutterTitle';
-import itunesSearch from '../utils/itunesSearch';
-import createSearchData from '../utils/createSearchData';
-import getMetadataParams from '../utils/getMetadataParams';
 import generateFileName from '../utils/generateFileName';
 
-import SearchData from '../types/SearchData';
-
-async function audio(
+async function video(
   info: videoInfo,
-  mw: boolean,
   // eslint-disable-next-line no-unused-vars
   onProgress: (percent: number) => void
 ): Promise<string> {
-  let mwStatus = mw;
-
-  let metadata: SearchData = {};
-  if (mwStatus) {
-    const title = unclutterTitle(info.videoDetails.title);
-    const search = await itunesSearch(title);
-    if (search) {
-      metadata = createSearchData(search);
-    } else {
-      mwStatus = false;
-    }
-  }
-
   const astream = ytdl.downloadFromInfo(info, { quality: 'highestaudio' });
+  const vstream = ytdl.downloadFromInfo(info, { quality: 'highestvideo' });
 
-  const fileName = generateFileName(info, 'audio', mwStatus, metadata);
+  const fileName = generateFileName(info, 'video', false);
 
   const ffproc = cp.spawn(
     ffmpeg,
@@ -41,13 +22,12 @@ async function audio(
 
       // Inputs
       ['-i', 'pipe:3'],
-      ...(mwStatus && metadata.cover ? ['-i', metadata.cover] : []),
+      ['-i', 'pipe:4'],
 
       // Codecs
+      ['-c:v', 'copy'],
+      ['-c:a', 'aac'],
       ['-preset', 'fast'],
-
-      // Metadata
-      ...(mwStatus ? getMetadataParams(metadata) : []),
 
       // Output
       [path.join('temp', fileName)]
@@ -59,7 +39,8 @@ async function audio(
         'inherit', // stdout
         'inherit', // stderr
 
-        'pipe', // pipe:3 -> audio
+        'pipe', // pipe:3 -> video
+        'pipe', // pipe:4 -> audio
       ],
     }
   );
@@ -75,6 +56,7 @@ async function audio(
 
   const result = await new Promise<Error | null>((resolve) => {
     astream.pipe(ffproc.stdio[3] as any);
+    vstream.pipe(ffproc.stdio[4] as any);
 
     ffproc.on('error', (error) => {
       resolve(error);
@@ -92,4 +74,4 @@ async function audio(
   }
 }
 
-export default audio;
+export default video;

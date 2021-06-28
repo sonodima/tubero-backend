@@ -5,6 +5,7 @@ import audio from '../core/audio';
 import isId from '../utils/isId';
 
 import ConvertQuery from '../types/ConvertQuery';
+import video from '../core/video';
 
 async function convert(
   req: Request<{}, {}, {}, ConvertQuery>,
@@ -25,7 +26,7 @@ async function convert(
     return;
   }
 
-  if (req.query.mw === undefined) {
+  if (req.query.fmt === 'audio' && req.query.mw === undefined) {
     res.status(400).json({ error: 'parameter [mw] is required' });
     return;
   }
@@ -47,14 +48,22 @@ async function convert(
     return;
   }
 
-  let id: string;
+  let id = '';
   try {
     // todo: handle video case
-    id = await audio(info, req.query.mw, (percent) => {
-      res.write('event: progress\n');
-      res.write(`data: ${JSON.stringify({ percent })}`);
-      res.write('\n\n');
-    });
+    if (req.query.fmt === 'audio') {
+      id = await audio(info, req.query.mw, (percent) => {
+        res.write('event: progress\n');
+        res.write(`data: ${JSON.stringify({ percent })}`);
+        res.write('\n\n');
+      });
+    } else if (req.query.fmt === 'video') {
+      id = await video(info, (percent) => {
+        res.write('event: progress\n');
+        res.write(`data: ${JSON.stringify({ percent })}`);
+        res.write('\n\n');
+      });
+    }
   } catch (error) {
     res.write('event: error\n');
     res.write(`data: ${JSON.stringify({ error: error.message })}`);

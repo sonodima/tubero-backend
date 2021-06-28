@@ -19,6 +19,7 @@
   },
   "rules": {
     "comma-dangle": "off",
+    "no-console": "off",
     "import/extensions": [
       "error",
       "ignorePackages",

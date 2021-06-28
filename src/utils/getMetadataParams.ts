@@ -31,7 +31,6 @@ function getMetadataParams(data: SearchData) {
       ? ['-metadata', `disc=${data.discNumber}/${data.discsCount}`]
       : []),
 
-    // check: is this really the right way to do it?
     ...(data.releaseDate ? ['-metadata', `date=${data.releaseDate}`] : []),
   ];
 }
