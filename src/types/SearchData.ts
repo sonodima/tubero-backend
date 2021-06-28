@@ -1,14 +1,14 @@
 type SearchData = {
-  title?: string | undefined;
-  artist?: string | undefined;
-  album?: string | undefined;
-  genre?: string | undefined;
-  trackNumber?: number | undefined;
-  tracksCount?: number | undefined;
-  discNumber?: number | undefined;
-  discsCount?: number | undefined;
-  releaseDate?: string | undefined;
-  cover?: string | undefined;
+  title?: string;
+  artist?: string;
+  album?: string;
+  genre?: string;
+  trackNumber?: number;
+  tracksCount?: number;
+  discNumber?: number;
+  discsCount?: number;
+  releaseDate?: string;
+  cover?: string;
 };
 
 export default SearchData;
