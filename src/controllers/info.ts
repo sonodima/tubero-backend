@@ -13,22 +13,14 @@ async function info(
   if (req.query.v === undefined) {
     res.status(400).json({
       error: 'parameter [v] is required',
-      title: undefined,
-      author: undefined,
-      thumbnail: undefined,
     });
     return;
   }
 
   if (!isId(req.query.v)) {
-    res
-      .status(400)
-      .json({
-        error: 'parameter [v] is not a valid id',
-        title: undefined,
-        author: undefined,
-        thumbnail: undefined,
-      });
+    res.status(400).json({
+      error: 'parameter [v] is not a valid id',
+    });
     return;
   }
 
@@ -38,15 +30,11 @@ async function info(
   } catch (error) {
     res.status(500).json({
       error: 'could not fetch video',
-      title: undefined,
-      author: undefined,
-      thumbnail: undefined,
     });
     return;
   }
 
   res.status(200).json({
-    error: undefined,
     title: vinfo.videoDetails.title,
     author: vinfo.videoDetails.author.name,
     thumbnail:

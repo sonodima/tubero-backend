@@ -1,8 +1,8 @@
 type InfoResponse = {
-  error: string | undefined;
-  title: string | undefined;
-  author: string | undefined;
-  thumbnail: string | undefined;
+  error?: string;
+  title?: string;
+  author?: string;
+  thumbnail?: string;
 };
 
 export default InfoResponse;
