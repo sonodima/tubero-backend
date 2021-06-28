@@ -45,7 +45,7 @@ async function video(
     }
   );
 
-  astream.on('progress', (_, downloaded: number, total: number) => {
+  vstream.on('progress', (_, downloaded: number, total: number) => {
     const percent = (downloaded / total) * 100;
     onProgress(percent);
   });
@@ -55,8 +55,8 @@ async function video(
   });
 
   const result = await new Promise<Error | null>((resolve) => {
-    astream.pipe(ffproc.stdio[3] as any);
-    vstream.pipe(ffproc.stdio[4] as any);
+    vstream.pipe(ffproc.stdio[3] as any);
+    astream.pipe(ffproc.stdio[4] as any);
 
     ffproc.on('error', (error) => {
       resolve(error);
