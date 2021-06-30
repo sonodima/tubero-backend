@@ -16,7 +16,16 @@ async function info(
     return;
   }
 
-  const search = await ytsr(req.query.q, { limit: 5 });
+  const filters = await ytsr.getFilters(req.query.q);
+  const filter = filters.get('Type')?.get('Video');
+  if (!filter || filter.url === null) {
+    res.status(400).json({
+      error: 'could not find any video',
+    });
+    return;
+  }
+
+  const search = await ytsr(filter.url, { limit: 10 });
 
   const response: SearchResponse = {
     corrected: search.correctedQuery,
