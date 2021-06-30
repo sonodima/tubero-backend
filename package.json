@@ -15,6 +15,7 @@
     "@types/cors": "^2.8.10",
     "@types/express": "^4.17.12",
     "@types/ffmpeg-static": "^3.0.0",
+    "@types/morgan": "^1.9.2",
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "^4.28.0",
     "@typescript-eslint/parser": "^4.28.0",
@@ -28,8 +29,10 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "ffmpeg-static": "^4.4.0",
+    "morgan": "^1.10.0",
     "node-itunes-search": "^1.2.2",
     "ytdl-core": "^4.8.3",
     "ytsr": "^3.5.0"

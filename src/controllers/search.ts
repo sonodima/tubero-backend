@@ -9,7 +9,7 @@ async function info(
   req: Request<{}, {}, {}, SearchQuery>,
   res: Response<SearchResponse>
 ): Promise<any> {
-  if (req.query.q === undefined) {
+  if (req.query.q === undefined || req.query.q === '') {
     res.status(400).json({
       error: 'parameter [q] is required',
     });
@@ -28,7 +28,7 @@ async function info(
       const searchItem: SearchItem = {
         v: item.id,
         title: item.title,
-        author: item.author?.url,
+        author: item.author?.name,
         thumbnail: item.bestThumbnail.url,
       };
 

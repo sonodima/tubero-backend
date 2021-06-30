@@ -1,9 +1,12 @@
 import fs from 'fs';
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+import morgan from 'morgan';
 
 import apiRoutes from './routes/api';
 
+dotenv.config();
 const app = express();
 const port = process.env.PORT || 8080;
 
@@ -17,6 +20,7 @@ const corsOptions = {
     fs.mkdirSync('temp');
   }
 
+  app.use(morgan('dev'));
   app.use(cors(corsOptions));
   app.use('/', apiRoutes);
 
