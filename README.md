@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="168" height="168" src="https://github.com/sonodima/tubero-backend/resources/icon.png?raw=true">
+  <img width="168" height="168" src="https://raw.githubusercontent.com/sonodima/tubero-backend/master/resources/icon.png">
 </p>
 
 <h1 align="center">tubero</h1>
