@@ -4,7 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 
-import Trash from './core/Trash';
+import trash from './core/Trash';
 import apiRoutes from './routes/api';
 
 dotenv.config();
@@ -21,9 +21,9 @@ const corsOptions = {
     fs.mkdirSync('temp');
   }
 
-  Trash.emptyDir();
+  trash.emptyDir();
   setInterval(() => {
-    Trash.clear();
+    trash.clear();
   }, 1000 * 60 * 10);
 
   app.use(morgan('dev'));

@@ -55,12 +55,8 @@ async function convert(
   };
 
   req.on('close', () => {
-    core.kill();
     console.log('connection closed unexpectedly, killing process');
-  });
-
-  req.on('end', () => {
-    console.log('connection ended');
+    core.kill();
   });
 
   let id = '';

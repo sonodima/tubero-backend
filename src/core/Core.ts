@@ -9,19 +9,19 @@ import itunesSearch from '../utils/itunesSearch';
 import createSearchData from '../utils/createSearchData';
 import getMetadataParams from '../utils/getMetadataParams';
 import generateFileName from '../utils/generateFileName';
-import Trash from './Trash';
+import trash from './Trash';
 
 import SearchData from '../types/SearchData';
 
 class Core {
-  process: cp.ChildProcess | undefined;
+  process?: cp.ChildProcess;
 
   streams: { source: Readable; target: Writable }[];
 
-  fileName: string | undefined;
+  fileName?: string;
 
   // eslint-disable-next-line no-unused-vars
-  onProgress: ((percent: number) => void) | undefined;
+  onProgress?: (percent: number) => void;
 
   constructor() {
     this.streams = [];
@@ -35,7 +35,7 @@ class Core {
     setTimeout(async () => {
       this.process?.kill();
       if (this.fileName) {
-        Trash.add(this.fileName);
+        trash.add(this.fileName);
       }
     }, 200);
   }
@@ -61,7 +61,7 @@ class Core {
     this.process = cp.spawn(
       ffmpeg,
       Array.prototype.concat(
-        // ['-loglevel', '8', '-hide_banner'],
+        ['-loglevel', '8', '-hide_banner'],
 
         // Inputs
         ['-i', 'pipe:3'],
@@ -167,7 +167,7 @@ class Core {
     }
 
     vstream.on('progress', (_, downloaded: number, total: number) => {
-      const percent = (downloaded / total) * 100;
+      const percent = Math.floor((downloaded / total) * 100);
       if (this.onProgress) {
         this.onProgress(percent);
       }
