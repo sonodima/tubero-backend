@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import ytdl, { videoInfo } from 'ytdl-core';
 
-import audio from '../core/audio';
 import isId from '../utils/isId';
 
 import ConvertQuery from '../types/ConvertQuery';
-import video from '../core/video';
+import Core from '../core/Core';
 
 async function convert(
   req: Request<{}, {}, {}, ConvertQuery>,
@@ -48,21 +47,28 @@ async function convert(
     return;
   }
 
+  const core = new Core();
+  core.onProgress = (percent) => {
+    res.write('event: progress\n');
+    res.write(`data: ${JSON.stringify({ percent })}`);
+    res.write('\n\n');
+  };
+
+  req.on('close', () => {
+    core.kill();
+    console.log('connection closed unexpectedly, killing process');
+  });
+
+  req.on('end', () => {
+    console.log('connection ended');
+  });
+
   let id = '';
   try {
-    // todo: handle video case
     if (req.query.fmt === 'audio') {
-      id = await audio(info, req.query.mw, (percent) => {
-        res.write('event: progress\n');
-        res.write(`data: ${JSON.stringify({ percent })}`);
-        res.write('\n\n');
-      });
+      id = await core.audio(info, req.query.mw);
     } else if (req.query.fmt === 'video') {
-      id = await video(info, (percent) => {
-        res.write('event: progress\n');
-        res.write(`data: ${JSON.stringify({ percent })}`);
-        res.write('\n\n');
-      });
+      id = await core.video(info);
     }
   } catch (error) {
     res.write('event: error\n');

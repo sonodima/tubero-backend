@@ -28,6 +28,7 @@ async function info(
   try {
     vinfo = await ytdl.getBasicInfo(req.query.v);
   } catch (error) {
+    console.error(error.message);
     res.status(500).json({
       error: 'could not fetch video',
     });

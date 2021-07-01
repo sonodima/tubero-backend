@@ -4,6 +4,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 
+import Trash from './core/Trash';
 import apiRoutes from './routes/api';
 
 dotenv.config();
@@ -19,6 +20,11 @@ const corsOptions = {
     console.warn('temp directory does not exist, creating it');
     fs.mkdirSync('temp');
   }
+
+  Trash.emptyDir();
+  setInterval(() => {
+    Trash.clear();
+  }, 1000 * 60 * 10);
 
   app.use(morgan('dev'));
   app.use(cors(corsOptions));
