@@ -19,7 +19,7 @@
 #### Docker (recommended)
 
 ```sh
-docker run -p 4444:8080 --name tubero-backend sonodima/tubero-backend
+docker run -d -p 4444:8080 --name tubero-backend sonodima/tubero-backend
 ```
 
 #### Manual
