@@ -11,7 +11,7 @@ async function info(
 ): Promise<any> {
   if (req.query.q === undefined || req.query.q === '') {
     res.status(400).json({
-      error: 'parameter [q] is required',
+      error: 'Parameter [q] is required',
     });
     return;
   }
@@ -20,7 +20,7 @@ async function info(
   const filter = filters.get('Type')?.get('Video');
   if (!filter || filter.url === null) {
     res.status(400).json({
-      error: 'could not find any video',
+      error: 'Could not find any video',
     });
     return;
   }

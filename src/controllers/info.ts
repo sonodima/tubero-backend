@@ -12,14 +12,14 @@ async function info(
 ): Promise<any> {
   if (req.query.v === undefined) {
     res.status(400).json({
-      error: 'parameter [v] is required',
+      error: 'Parameter [v] is required',
     });
     return;
   }
 
   if (!isId(req.query.v)) {
     res.status(400).json({
-      error: 'parameter [v] is not a valid id',
+      error: 'Parameter [v] is not a valid id',
     });
     return;
   }
@@ -30,7 +30,7 @@ async function info(
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
-      error: 'could not fetch video',
+      error: 'Could not fetch video',
     });
     return;
   }

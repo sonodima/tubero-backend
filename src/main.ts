@@ -19,9 +19,10 @@ const corsOptions = {
   if (!fs.existsSync('temp')) {
     console.warn('temp directory does not exist, creating it');
     fs.mkdirSync('temp');
+  } else {
+    trash.emptyDir();
   }
 
-  trash.emptyDir();
   setInterval(() => {
     trash.clear();
   }, 1000 * 60 * 10);

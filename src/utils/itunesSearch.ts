@@ -2,7 +2,7 @@ import itunes from 'node-itunes-search';
 
 async function itunesSearch(title: string) {
   const result = await itunes.search({
-    term: title,
+    term: encodeURI(title),
     limit: 1,
     media: itunes.Media.Music,
   });

@@ -11,22 +11,32 @@ async function convert(
   res: Response
 ): Promise<any> {
   if (req.query.v === undefined) {
-    res.status(400).json({ error: 'parameter [v] is required' });
+    res.status(400).json({ error: 'Parameter [v] is required' });
     return;
   }
 
   if (!isId(req.query.v)) {
-    res.status(400).json({ error: 'parameter [v] is not a valid id' });
+    res.status(400).json({ error: 'Parameter [v] is not a valid id' });
     return;
   }
 
   if (!['audio', 'video'].includes(req.query.fmt)) {
-    res.status(400).json({ error: 'parameter [fmt] is required' });
+    res.status(400).json({ error: 'Parameter [fmt] is required' });
     return;
   }
 
   if (req.query.fmt === 'audio' && req.query.mw === undefined) {
-    res.status(400).json({ error: 'parameter [mw] is required' });
+    res.status(400).json({ error: 'Parameter [mw] is required' });
+    return;
+  }
+
+  let info: videoInfo;
+  try {
+    info = await ytdl.getInfo(req.query.v);
+  } catch (error) {
+    res.status(500).json({
+      error: 'Could not fetch the video',
+    });
     return;
   }
 
@@ -37,16 +47,6 @@ async function convert(
   });
   res.flushHeaders();
 
-  let info: videoInfo;
-  try {
-    info = await ytdl.getInfo(req.query.v);
-  } catch (error) {
-    res.status(500).json({
-      error: 'could not fetch the video',
-    });
-    return;
-  }
-
   const core = new Core();
   core.onProgress = (percent) => {
     res.write('event: progress\n');
@@ -55,7 +55,7 @@ async function convert(
   };
 
   req.on('close', () => {
-    console.log('connection closed unexpectedly, killing process');
+    console.log('connection closed unexpectedly, killing ffmpeg process');
     core.kill();
   });
 
@@ -70,12 +70,14 @@ async function convert(
     res.write('event: error\n');
     res.write(`data: ${JSON.stringify({ error: error.message })}`);
     res.write('\n\n');
+    res.end();
     return;
   }
 
   res.write('event: success\n');
   res.write(`data: ${JSON.stringify({ id })}`);
   res.write('\n\n');
+  res.end();
 }
 
 export default convert;

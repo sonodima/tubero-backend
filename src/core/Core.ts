@@ -89,7 +89,7 @@ class Core {
     );
 
     if (this.process === undefined) {
-      throw new Error('could not start conversion process');
+      throw new Error('Could not start conversion process');
     }
 
     astream.on('progress', (_, downloaded: number, total: number) => {
@@ -163,7 +163,7 @@ class Core {
     );
 
     if (this.process === undefined) {
-      throw new Error('could not start conversion process');
+      throw new Error('Could not start conversion process');
     }
 
     vstream.on('progress', (_, downloaded: number, total: number) => {

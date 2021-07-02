@@ -11,7 +11,7 @@ async function download(
 ): Promise<any> {
   if (req.query.id === undefined || req.query.id === '') {
     res.status(400).json({
-      error: 'parameter [id] is required',
+      error: 'Parameter [id] is required',
     });
     return;
   }
@@ -23,7 +23,7 @@ async function download(
   try {
     stats = await fsp.stat(filePath);
   } catch (error) {
-    res.status(404).json({ error: 'resource not available' });
+    res.status(404).json({ error: 'Resource not available' });
     return;
   }
 
