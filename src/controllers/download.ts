@@ -28,7 +28,7 @@ async function download(
   }
 
   res.writeHead(200, {
-    'Content-Disposition': `attachment; filename="${title}"`,
+    'Content-Disposition': `attachment; filename="${encodeURI(title)}"`,
     'Content-Length': stats.size,
   });
 
