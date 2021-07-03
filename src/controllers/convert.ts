@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import youtubedl, { YtResponse } from 'youtube-dl-exec';
 
 import isId from '../utils/isId';
+import Core from '../core/Core';
 
 import ConvertQuery from '../types/ConvertQuery';
-import Core from '../core/Core';
+import ProgressData from '../types/ProgressData';
 
 async function convert(
   req: Request<{}, {}, {}, ConvertQuery>,
@@ -32,6 +33,12 @@ async function convert(
     return;
   }
 
+  const onProgress = (progress: ProgressData) => {
+    res.write('event: progress\n');
+    res.write(`data: ${JSON.stringify({ progress })}`);
+    res.write('\n\n');
+  };
+
   let info: YtResponse;
   try {
     info = await youtubedl(req.query.v, {
@@ -55,11 +62,8 @@ async function convert(
   });
   res.flushHeaders();
 
-  const core = new Core((progress) => {
-    res.write('event: progress\n');
-    res.write(`data: ${JSON.stringify({ progress })}`);
-    res.write('\n\n');
-  });
+  const core = new Core();
+  core.onProgress = onProgress;
 
   let completed = false;
   req.on('close', () => {
@@ -68,6 +72,8 @@ async function convert(
       core.kill();
     }
   });
+
+  onProgress({ phase: 'fetch' });
 
   let id = '';
   try {

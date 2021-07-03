@@ -21,9 +21,10 @@ class Core {
   fileName?: string;
 
   // eslint-disable-next-line no-unused-vars
-  constructor(onProgress: (progress: ProgressData) => void) {
+  onProgress?: (progress: ProgressData) => void;
+
+  constructor() {
     this.converter = new Converter();
-    this.converter.onProgress = onProgress;
   }
 
   public kill() {
@@ -47,6 +48,7 @@ class Core {
       }
     }
 
+    this.converter.onProgress = this.onProgress;
     this.fileName = generateFileName(info.title, mwStatus, metadata);
 
     await this.converter.execute(info.id, {
@@ -61,6 +63,12 @@ class Core {
     if (mwStatus) {
       const coverPath = path.join('temp', `${this.fileName}.jpg`);
 
+      if (this.onProgress) {
+        this.onProgress({
+          phase: 'cover',
+        });
+      }
+
       let hasCover = false;
       if (metadata.cover) {
         try {
@@ -69,6 +77,12 @@ class Core {
         } catch (error) {
           console.warn(error.message);
         }
+      }
+
+      if (this.onProgress) {
+        this.onProgress({
+          phase: 'metadata',
+        });
       }
 
       const tags = {
@@ -102,6 +116,7 @@ class Core {
   }
 
   public async video(info: youtubedl.YtResponse): Promise<string> {
+    this.converter.onProgress = this.onProgress;
     this.fileName = generateFileName(info.title, false);
 
     await this.converter.execute(info.id, {

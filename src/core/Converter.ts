@@ -36,7 +36,19 @@ class Converter {
               const eta = progress[4];
 
               if (this.onProgress) {
-                this.onProgress({ percent, size, speed, eta });
+                this.onProgress({
+                  phase: 'download',
+                  percent,
+                  size,
+                  speed,
+                  eta,
+                });
+
+                if (percent === 100) {
+                  this.onProgress({
+                    phase: 'conversion',
+                  });
+                }
               }
             }
           }
