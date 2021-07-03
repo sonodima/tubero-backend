@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import ytdl, { videoInfo } from 'ytdl-core';
+import youtubedl, { YtResponse } from 'youtube-dl-exec';
 
 import isId from '../utils/isId';
 
@@ -24,23 +24,26 @@ async function info(
     return;
   }
 
-  let vinfo: videoInfo;
+  let vinfo: YtResponse;
   try {
-    vinfo = await ytdl.getBasicInfo(req.query.v);
+    vinfo = await youtubedl(req.query.v, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      noCallHome: true,
+      noCheckCertificate: true,
+      youtubeSkipDashManifest: true,
+    });
   } catch (error) {
-    console.error(error.message);
     res.status(500).json({
-      error: 'Could not fetch video',
+      error: 'Could not fetch the video',
     });
     return;
   }
 
   res.status(200).json({
-    title: vinfo.videoDetails.title,
-    author: vinfo.videoDetails.author.name,
-    thumbnail:
-      vinfo.videoDetails.thumbnails[vinfo.videoDetails.thumbnails.length - 1]
-        .url,
+    title: vinfo.title,
+    author: vinfo.channel,
+    thumbnail: vinfo.thumbnails[vinfo.thumbnails.length - 1].url,
   });
 }
 

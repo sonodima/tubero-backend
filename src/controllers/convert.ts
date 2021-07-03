@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import ytdl, { videoInfo } from 'ytdl-core';
+import youtubedl, { YtResponse } from 'youtube-dl-exec';
 
 import isId from '../utils/isId';
 
@@ -30,9 +30,15 @@ async function convert(
     return;
   }
 
-  let info: videoInfo;
+  let info: YtResponse;
   try {
-    info = await ytdl.getInfo(req.query.v);
+    info = await youtubedl(req.query.v, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      noCallHome: true,
+      noCheckCertificate: true,
+      youtubeSkipDashManifest: true,
+    });
   } catch (error) {
     res.status(500).json({
       error: 'Could not fetch the video',
@@ -47,16 +53,18 @@ async function convert(
   });
   res.flushHeaders();
 
-  const core = new Core();
-  core.onProgress = (percent) => {
+  const core = new Core((progress) => {
     res.write('event: progress\n');
-    res.write(`data: ${JSON.stringify({ percent })}`);
+    res.write(`data: ${JSON.stringify({ progress })}`);
     res.write('\n\n');
-  };
+  });
 
+  let completed = false;
   req.on('close', () => {
-    console.log('connection closed unexpectedly, killing ffmpeg process');
-    core.kill();
+    if (!completed) {
+      console.log('connection closed unexpectedly, killing ffmpeg process');
+      core.kill();
+    }
   });
 
   let id = '';
@@ -74,6 +82,7 @@ async function convert(
     return;
   }
 
+  completed = true;
   res.write('event: success\n');
   res.write(`data: ${JSON.stringify({ id })}`);
   res.write('\n\n');

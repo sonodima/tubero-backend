@@ -1,4 +1,5 @@
 import fs from 'fs';
+import fsp from 'fs/promises';
 import path from 'path';
 
 class Trash {
@@ -13,22 +14,28 @@ class Trash {
   }
 
   public clear() {
-    console.log('performing trash cleanup');
-    this.list.forEach((file, index, array) => {
-      fs.unlink(path.join('temp', file), (err) => {
-        if (!err) {
-          array.splice(index, 1);
-        } else {
-          console.warn(`could not delete file at ${file}`);
-        }
-      });
+    this.list.forEach(async (file, index, array) => {
+      const filePath = path.join('temp', file);
+
+      try {
+        await fsp.stat(filePath);
+
+        fs.unlink(filePath, (err) => {
+          if (!err) {
+            array.splice(index, 1);
+          } else {
+            console.warn(`could not delete file at ${file}`);
+          }
+        });
+      } catch (error) {
+        array.splice(index, 1);
+      }
     });
   }
 
   // eslint-disable-next-line class-methods-use-this
   public emptyDir() {
     fs.readdir('temp' as fs.PathLike, (_, files) => {
-      console.log('performing initial directory cleanup');
       files.forEach((file) => {
         fs.unlink(path.join('temp', file), (err) => {
           if (err) {

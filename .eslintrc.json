@@ -20,6 +20,7 @@
   "rules": {
     "comma-dangle": "off",
     "no-console": "off",
+    "object-curly-newline": "off",
     "import/extensions": [
       "error",
       "ignorePackages",

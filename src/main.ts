@@ -25,7 +25,7 @@ const corsOptions = {
 
   setInterval(() => {
     trash.clear();
-  }, 1000 * 60 * 10);
+  }, 1000 * 60 * 2);
 
   app.use(morgan('dev'));
   app.use(cors(corsOptions));

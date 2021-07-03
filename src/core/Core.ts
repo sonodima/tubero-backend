@@ -1,51 +1,44 @@
 import path from 'path';
-import cp from 'child_process';
-import { Readable, Writable } from 'stream';
-import ytdl, { videoInfo } from 'ytdl-core';
-import ffmpeg from 'ffmpeg-static';
+import fsp from 'fs/promises';
+import * as youtubedl from 'youtube-dl-exec';
+import id3 from 'node-id3';
 
 import unclutterTitle from '../utils/unclutterTitle';
 import itunesSearch from '../utils/itunesSearch';
 import createSearchData from '../utils/createSearchData';
-import getMetadataParams from '../utils/getMetadataParams';
 import generateFileName from '../utils/generateFileName';
+import downloadFile from '../utils/downloadFile';
+
+import Converter from './Converter';
 import trash from './Trash';
 
 import SearchData from '../types/SearchData';
+import ProgressData from '../types/ProgressData';
 
 class Core {
-  process?: cp.ChildProcess;
-
-  streams: { source: Readable; target: Writable }[];
+  converter: Converter;
 
   fileName?: string;
 
   // eslint-disable-next-line no-unused-vars
-  onProgress?: (percent: number) => void;
-
-  constructor() {
-    this.streams = [];
+  constructor(onProgress: (progress: ProgressData) => void) {
+    this.converter = new Converter();
+    this.converter.onProgress = onProgress;
   }
 
   public kill() {
-    this.streams.forEach((stream) => {
-      stream.source.unpipe(stream.target);
-    });
-
-    setTimeout(async () => {
-      this.process?.kill();
-      if (this.fileName) {
-        trash.add(this.fileName);
-      }
-    }, 200);
+    this.converter.process?.cancel();
+    if (this.fileName) {
+      trash.add(this.fileName);
+    }
   }
 
-  public async audio(info: videoInfo, mw: boolean): Promise<string> {
+  public async audio(info: youtubedl.YtResponse, mw: boolean): Promise<string> {
     let mwStatus = mw;
 
     let metadata: SearchData = {};
     if (mwStatus) {
-      const title = unclutterTitle(info.videoDetails.title);
+      const title = unclutterTitle(info.title);
       const search = await itunesSearch(title);
       if (search) {
         metadata = createSearchData(search);
@@ -54,156 +47,71 @@ class Core {
       }
     }
 
-    const astream = ytdl.downloadFromInfo(info, { quality: 'highestaudio' });
+    this.fileName = generateFileName(info.title, mwStatus, metadata);
 
-    this.fileName = generateFileName(info, 'audio', mwStatus, metadata);
+    await this.converter.execute(info.id, {
+      extractAudio: true,
+      audioFormat: 'mp3',
 
-    this.process = cp.spawn(
-      ffmpeg,
-      Array.prototype.concat(
-        ['-loglevel', '8', '-hide_banner'],
+      // ...(mwStatus === false && { addMetadata: true, embedThumbnail: true }),
 
-        // Inputs
-        ['-i', 'pipe:3'],
-        ...(mwStatus && metadata.cover ? ['-i', metadata.cover] : []),
+      output: path.join('temp', `${this.fileName}.%(ext)s`),
+    });
 
-        // Codecs
-        ['-preset', 'fast'],
+    if (mwStatus) {
+      const coverPath = path.join('temp', `${this.fileName}.jpg`);
 
-        // Metadata
-        ...(mwStatus ? getMetadataParams(metadata) : []),
-
-        // Output
-        [path.join('temp', this.fileName)]
-      ),
-      {
-        windowsHide: true,
-        stdio: [
-          'inherit', // stdin
-          'inherit', // stdout
-          'inherit', // stderr
-
-          'pipe', // pipe:3 -> audio
-        ],
+      let hasCover = false;
+      if (metadata.cover) {
+        try {
+          await downloadFile(metadata.cover, coverPath);
+          hasCover = true;
+        } catch (error) {
+          console.warn(error.message);
+        }
       }
-    );
 
-    if (this.process === undefined) {
-      throw new Error('Could not start conversion process');
+      const tags = {
+        title: metadata.title,
+        artist: metadata.artist,
+        album: metadata.album,
+        genre: metadata.genre,
+        year: metadata.releaseDate,
+        ...(hasCover ? { APIC: coverPath } : {}),
+        TRCK: `${metadata.trackNumber}/${metadata.tracksCount}`,
+        TPOS: `${metadata.discNumber}/${metadata.discsCount}`,
+      };
+
+      const success = id3.write(
+        tags,
+        path.join('temp', `${this.fileName}.mp3`)
+      );
+
+      try {
+        await fsp.rm(coverPath);
+      } catch (error) {
+        console.warn(`could not remove file: ${coverPath}`);
+      }
+
+      if (!success) {
+        console.warn((success as Error).message);
+      }
     }
 
-    astream.on('progress', (_, downloaded: number, total: number) => {
-      const percent = Math.floor((downloaded / total) * 100);
-      if (this.onProgress) {
-        this.onProgress(percent);
-      }
-    });
-
-    this.process.on('spawn', () => {
-      console.log(`[ffmpeg@${this.process!.pid}] is now handling the request`);
-    });
-
-    const result = await new Promise<Error | null>((resolve) => {
-      astream.pipe(this.process!.stdio[3] as Writable);
-      this.streams.push({
-        source: astream,
-        target: this.process!.stdio[3] as Writable,
-      });
-
-      this.process!.on('error', (error) => {
-        resolve(error);
-      });
-
-      this.process!.on('close', () => {
-        resolve(null);
-      });
-    });
-
-    if (result !== null) {
-      throw result;
-    } else {
-      return this.fileName;
-    }
+    return `${this.fileName}.mp3`;
   }
 
-  public async video(info: videoInfo): Promise<string> {
-    const astream = ytdl.downloadFromInfo(info, { quality: 'highestaudio' });
-    const vstream = ytdl.downloadFromInfo(info, { quality: 'highestvideo' });
+  public async video(info: youtubedl.YtResponse): Promise<string> {
+    this.fileName = generateFileName(info.title, false);
 
-    this.fileName = generateFileName(info, 'video', false);
+    await this.converter.execute(info.id, {
+      mergeOutputFormat: 'mp4',
+      format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]',
 
-    this.process = cp.spawn(
-      ffmpeg,
-      Array.prototype.concat(
-        ['-loglevel', '8', '-hide_banner'],
-
-        // Inputs
-        ['-i', 'pipe:3'],
-        ['-i', 'pipe:4'],
-
-        // Codecs
-        ['-c:v', 'copy'],
-        ['-c:a', 'aac'],
-        ['-preset', 'fast'],
-
-        // Output
-        [path.join('temp', this.fileName)]
-      ),
-      {
-        windowsHide: true,
-        stdio: [
-          'inherit', // stdin
-          'inherit', // stdout
-          'inherit', // stderr
-
-          'pipe', // pipe:3 -> video
-          'pipe', // pipe:4 -> audio
-        ],
-      }
-    );
-
-    if (this.process === undefined) {
-      throw new Error('Could not start conversion process');
-    }
-
-    vstream.on('progress', (_, downloaded: number, total: number) => {
-      const percent = Math.floor((downloaded / total) * 100);
-      if (this.onProgress) {
-        this.onProgress(percent);
-      }
+      output: path.join('temp', `${this.fileName}.%(ext)s`),
     });
 
-    this.process.on('spawn', () => {
-      console.log(`[ffmpeg@${this.process!.pid}] is now handling the request`);
-    });
-
-    const result = await new Promise<Error | null>((resolve) => {
-      vstream.pipe(this.process!.stdio[3] as Writable);
-      this.streams.push({
-        source: vstream,
-        target: this.process!.stdio[3] as Writable,
-      });
-
-      astream.pipe(this.process!.stdio[4] as Writable);
-      this.streams.push({
-        source: astream,
-        target: this.process!.stdio[4] as Writable,
-      });
-
-      this.process!.on('error', (error) => {
-        resolve(error);
-      });
-
-      this.process!.on('close', () => {
-        resolve(null);
-      });
-    });
-
-    if (result !== null) {
-      throw result;
-    } else {
-      return this.fileName;
-    }
+    return `${this.fileName}.mp4`;
   }
 }
 
