@@ -53,7 +53,7 @@ class Core {
       extractAudio: true,
       audioFormat: 'mp3',
 
-      // ...(mwStatus === false && { addMetadata: true, embedThumbnail: true }),
+      ...(!mwStatus && { addMetadata: true, embedThumbnail: true }),
 
       output: path.join('temp', `${this.fileName}.%(ext)s`),
     });

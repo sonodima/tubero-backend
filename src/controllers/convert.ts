@@ -10,6 +10,8 @@ async function convert(
   req: Request<{}, {}, {}, ConvertQuery>,
   res: Response
 ): Promise<any> {
+  const mw = req.query.mw === 'true';
+
   if (req.query.v === undefined) {
     res.status(400).json({ error: 'Parameter [v] is required' });
     return;
@@ -62,7 +64,7 @@ async function convert(
   let completed = false;
   req.on('close', () => {
     if (!completed) {
-      console.log('connection closed unexpectedly, killing ffmpeg process');
+      console.log('connection closed unexpectedly, killing youtube-dl process');
       core.kill();
     }
   });
@@ -70,7 +72,7 @@ async function convert(
   let id = '';
   try {
     if (req.query.fmt === 'audio') {
-      id = await core.audio(info, req.query.mw);
+      id = await core.audio(info, mw);
     } else if (req.query.fmt === 'video') {
       id = await core.video(info);
     }

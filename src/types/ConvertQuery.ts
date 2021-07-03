@@ -1,7 +1,7 @@
 type ConvertQuery = {
   v: string;
   fmt: 'audio' | 'video';
-  mw: boolean;
+  mw: 'true' | 'false';
 };
 
 export default ConvertQuery;
