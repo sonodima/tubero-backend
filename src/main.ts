@@ -17,7 +17,7 @@ const corsOptions = {
 
 (async () => {
   if (!fs.existsSync('temp')) {
-    console.warn('temp directory does not exist, creating it');
+    console.warn('creating temp directory');
     fs.mkdirSync('temp');
   } else {
     trash.emptyDir();
