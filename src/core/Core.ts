@@ -34,6 +34,19 @@ class Core {
     }
   }
 
+  // eslint-disable-next-line class-methods-use-this
+  public async getInfo(v: string) {
+    const info = await youtubedl.default(v, {
+      dumpSingleJson: true,
+      noWarnings: true,
+      noCallHome: true,
+      noCheckCertificate: true,
+      youtubeSkipDashManifest: true,
+    });
+
+    return info;
+  }
+
   public async audio(info: youtubedl.YtResponse, mw: boolean): Promise<string> {
     let mwStatus = mw;
 

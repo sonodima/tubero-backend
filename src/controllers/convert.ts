@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import youtubedl, { YtResponse } from 'youtube-dl-exec';
+import { YtResponse } from 'youtube-dl-exec';
 
 import isId from '../utils/isId';
 import Core from '../core/Core';
@@ -33,28 +33,6 @@ async function convert(
     return;
   }
 
-  const onProgress = (progress: ProgressData) => {
-    res.write('event: progress\n');
-    res.write(`data: ${JSON.stringify({ progress })}`);
-    res.write('\n\n');
-  };
-
-  let info: YtResponse;
-  try {
-    info = await youtubedl(req.query.v, {
-      dumpSingleJson: true,
-      noWarnings: true,
-      noCallHome: true,
-      noCheckCertificate: true,
-      youtubeSkipDashManifest: true,
-    });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Could not fetch the video',
-    });
-    return;
-  }
-
   res.set({
     Connection: 'keep-alive',
     'Cache-Control': 'no-cache',
@@ -62,8 +40,29 @@ async function convert(
   });
   res.flushHeaders();
 
+  const onProgress = (progress: ProgressData) => {
+    res.write('event: progress\n');
+    res.write(`data: ${JSON.stringify({ progress })}`);
+    res.write('\n\n');
+  };
+
+  const onError = (error: Error) => {
+    res.write('event: error\n');
+    res.write(`data: ${JSON.stringify({ error: error.message })}`);
+    res.write('\n\n');
+  };
+
   const core = new Core();
   core.onProgress = onProgress;
+
+  onProgress({ phase: 'info' });
+  let info: YtResponse;
+  try {
+    info = await core.getInfo(req.query.v);
+  } catch (error) {
+    onError(new Error('Could not fetch the video'));
+    return;
+  }
 
   let completed = false;
   req.on('close', () => {
@@ -73,8 +72,7 @@ async function convert(
     }
   });
 
-  onProgress({ phase: 'fetch' });
-
+  onProgress({ phase: 'startup' });
   let id = '';
   try {
     if (req.query.fmt === 'audio') {
@@ -83,9 +81,7 @@ async function convert(
       id = await core.video(info);
     }
   } catch (error) {
-    res.write('event: error\n');
-    res.write(`data: ${JSON.stringify({ error: error.message })}`);
-    res.write('\n\n');
+    onError(error);
     res.end();
     return;
   }

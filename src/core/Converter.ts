@@ -17,7 +17,8 @@ class Converter {
         resolve(error);
       });
 
-      this.process.stderr!.on('error', (error) => {
+      this.process.stderr!.on('data', (data) => {
+        const error = new Error(data.toString().replace('ERROR: ', ''));
         resolve(error);
       });
 
