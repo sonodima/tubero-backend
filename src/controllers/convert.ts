@@ -42,7 +42,7 @@ async function convert(
 
   const onProgress = (progress: ProgressData) => {
     res.write('event: progress\n');
-    res.write(`data: ${JSON.stringify({ progress })}`);
+    res.write(`data: ${JSON.stringify(progress)}`);
     res.write('\n\n');
   };
 
